@@ -1,4 +1,4 @@
-# 会员层级与下游人数分析工具
+# 层级架构分析工具
 
 ## 项目简介
 
@@ -70,10 +70,4 @@ pip install pandas openpyxl xlrd xlwt
 - **Direct_Downstream_Count**: 每个会员的直接下游人数，表示该会员直接推荐的人数。
 - **Upstream_Path**: 每个会员的上游路径，显示从根节点到该会员的推荐链。
 
-## 贡献
 
-欢迎提交 `Issues` 或 `Pull Requests` 来改进该项目。
-
-## 许可证
-
-该项目采用 MIT 许可证进行授权，详细信息请参阅 LICENSE 文件。
