@@ -19,22 +19,26 @@
 
 在运行该程序前，请确保你已经安装了以下依赖库：
 
-`pip install pandas openpyxl xlrd xlwt`
+```
+pip install pandas openpyxl xlrd xlwt
+```
 
 ### 运行步骤
 
 1. 运行程序：
 
-    `python Hierarchical_Analysis.py`
+    ```
+   python Hierarchical_Analysis.py
+    ```
 
-2. 按照程序提示输入以下信息：
+3. 按照程序提示输入以下信息：
 
     - 输入文件路径（支持 `CSV`、`XLSX` 或 `XLS` 格式）。
     - 输出文件路径（如果留空，则默认保存至源文件路径，并自动添加 `_with_levels` 后缀）。
     - 会员 ID 列名。
     - 推荐人 ID 列名。
 
-3. 程序将读取输入文件，进行会员层级、下游人数、直接下游人数和上游路径的计算，并保存结果到输出文件中。
+4. 程序将读取输入文件，进行会员层级、下游人数、直接下游人数和上游路径的计算，并保存结果到输出文件中。
     
 
 ### 示例
