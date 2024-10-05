@@ -78,9 +78,10 @@ def calculate_membership_levels(input_file_path, member_id_col, referrer_id_col,
     if member_id_col not in df.columns or referrer_id_col not in df.columns:
         raise ValueError("提供的列名在数据中不存在，请检查输入的列名。")
     
-    # 初始化层级列、下游人数列和上游路径列
+    # 初始化层级列、下游人数列、上游路径列和直接下游人数列
     df['Level'] = -1
     df['Downstream_Count'] = 0
+    df['Direct_Downstream_Count'] = 0  # 新增直接下游人数列
     df['Upstream_Path'] = ''  # 新增上游路径列
     
     # 创建会员ID到推荐人ID的映射
@@ -118,16 +119,18 @@ def calculate_membership_levels(input_file_path, member_id_col, referrer_id_col,
                 referrer_downstream_map[referrer_id] = []
             referrer_downstream_map[referrer_id].append(member_id)
     
-    # 递归计算下游人数
+    # 为每个会员计算直接下游人数和总下游人数
     def calculate_downstream_count(member_id):
         if member_id not in referrer_downstream_map:
             return 0
-        total_downstream = len(referrer_downstream_map[member_id])
+        direct_downstream = len(referrer_downstream_map[member_id])
+        df.loc[df[member_id_col] == member_id, 'Direct_Downstream_Count'] = direct_downstream  # 设置直接下游人数
+        total_downstream = direct_downstream
         for downstream_id in referrer_downstream_map[member_id]:
             total_downstream += calculate_downstream_count(downstream_id)
         return total_downstream
     
-    # 为每个会员计算下游人数
+    # 为每个会员计算总下游人数
     for idx, row in df.iterrows():
         member_id = row[member_id_col]
         df.at[idx, 'Downstream_Count'] = calculate_downstream_count(member_id)
@@ -139,7 +142,7 @@ def calculate_membership_levels(input_file_path, member_id_col, referrer_id_col,
     
     # 处理文件名重复的情况
     write_file(df, output_file_path)
-    print(f"会员层级、下游人数和上游路径计算完成，结果已保存到 {output_file_path}")
+    print(f"会员层级、下游人数、直接下游人数和上游路径计算完成，结果已保存到 {output_file_path}")
     
     # 打印总层级数和最高层级
     max_level = df['Level'].max()
@@ -149,8 +152,8 @@ def calculate_membership_levels(input_file_path, member_id_col, referrer_id_col,
 # 示例使用
 if __name__ == "__main__":
     # 功能介绍
-    print("欢迎使用会员层级和下游人数计算程序！")
-    print("本程序支持读取CSV、XLSX和XLS格式的会员数据文件，计算并输出会员层级、下游人数和上游路径。")
+    print("欢迎使用层级架构分析程序！")
+    print("本程序支持读取CSV、XLSX和XLS格式的会员数据文件，计算并输出会员层级、下游人数、直接下游人数和上游路径。")
     print("请按照提示输入所需信息。")
     
     input_file_path = input("请输入输入文件的路径（支持CSV、XLSX、XLS格式）: ").strip()
