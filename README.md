@@ -20,7 +20,7 @@
 在运行该程序前，请确保你已经安装了以下依赖库：
 
 ```
-pip install pandas openpyxl xlrd xlwt
+pip install pandas openpyxl xlrd xlwt tqdm
 ```
 
 ### 运行步骤
@@ -29,7 +29,7 @@ pip install pandas openpyxl xlrd xlwt
 
     ```
    python Hierarchical_Analysis.py
-    ```
+   ```
 
 3. 按照程序提示输入以下信息：
 
@@ -39,7 +39,7 @@ pip install pandas openpyxl xlrd xlwt
     - 推荐人 ID 列名。
 
 4. 程序将读取输入文件，进行会员层级、下游人数、直接下游人数和上游路径的计算，并保存结果到输出文件中。
-    
+   
 
 ### 示例
 
@@ -69,5 +69,4 @@ pip install pandas openpyxl xlrd xlwt
 - **Downstream_Count**: 每个会员的总下游人数，包含直接和间接推荐的所有下游会员。
 - **Direct_Downstream_Count**: 每个会员的直接下游人数，表示该会员直接推荐的人数。
 - **Upstream_Path**: 每个会员的上游路径，显示从根节点到该会员的推荐链。
-
 

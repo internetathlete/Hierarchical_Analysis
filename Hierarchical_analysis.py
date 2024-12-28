@@ -3,6 +3,7 @@ import pandas as pd
 import warnings
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
+from tqdm import tqdm  # 引入 tqdm 用于显示进度条
 
 # 忽略特定的 UserWarning
 warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
@@ -34,6 +35,11 @@ def write_file(df, file_path):
     while os.path.exists(file_path):
         file_path = f"{base_path}_{index}{extension}"
         index += 1
+    
+    # 处理数字列长度问题
+    for col in df.columns:
+        if df[col].dtype in ['int64', 'float64']:  # 针对数字列进行处理
+            df[col] = df[col].apply(lambda x: str(x) if isinstance(x, (int, float)) and not pd.isna(x) and len(str(int(x))) > 11 else x)
     
     if file_path.endswith('.csv'):
         df.to_csv(file_path, index=False)
@@ -100,9 +106,9 @@ def calculate_membership_levels(input_file_path, member_id_col, referrer_id_col,
     # 提示计算会员层级开始
     print("开始计算会员层级和上游路径...")
     
-    # 为每个会员计算层级和上游路径
-    for idx, row in df.iterrows():
-        member_id = row[member_id_col]
+    # 使用 tqdm 来显示进度条
+    for idx in tqdm(df.index, desc="计算层级和路径", unit="行"):
+        member_id = df.at[idx, member_id_col]
         if df.at[idx, 'Level'] == -1:  # 如果还没有计算过层级
             level, path = get_level_and_path(member_id)
             df.at[idx, 'Level'] = level
@@ -110,7 +116,7 @@ def calculate_membership_levels(input_file_path, member_id_col, referrer_id_col,
     
     # 提示计算下游人数开始
     print("开始计算下游人数...")
-    
+
     # 创建推荐人ID到下游会员列表的映射
     referrer_downstream_map = {}
     for member_id, referrer_id in member_referrer_map.items():
@@ -119,20 +125,32 @@ def calculate_membership_levels(input_file_path, member_id_col, referrer_id_col,
                 referrer_downstream_map[referrer_id] = []
             referrer_downstream_map[referrer_id].append(member_id)
     
-    # 为每个会员计算直接下游人数和总下游人数
+    # 使用栈模拟递归计算下游人数
     def calculate_downstream_count(member_id):
-        if member_id not in referrer_downstream_map:
-            return 0
-        direct_downstream = len(referrer_downstream_map[member_id])
-        df.loc[df[member_id_col] == member_id, 'Direct_Downstream_Count'] = direct_downstream  # 设置直接下游人数
-        total_downstream = direct_downstream
-        for downstream_id in referrer_downstream_map[member_id]:
-            total_downstream += calculate_downstream_count(downstream_id)
+        total_downstream = 0
+        stack = [member_id]  # 使用栈模拟递归
+        seen = set()  # 防止重复计算
+
+        while stack:
+            current_member = stack.pop()
+            if current_member in seen:
+                continue
+            seen.add(current_member)
+            
+            # 获取直接下游人数
+            if current_member in referrer_downstream_map:
+                direct_downstream = len(referrer_downstream_map[current_member])
+                df.loc[df[member_id_col] == current_member, 'Direct_Downstream_Count'] = direct_downstream
+                total_downstream += direct_downstream
+
+                # 将下游成员添加到栈中，继续计算
+                stack.extend(referrer_downstream_map[current_member])
+
         return total_downstream
-    
-    # 为每个会员计算总下游人数
-    for idx, row in df.iterrows():
-        member_id = row[member_id_col]
+
+    # 使用 tqdm 来显示下游人数计算的进度
+    for idx in tqdm(df.index, desc="计算下游人数", unit="行"):
+        member_id = df.at[idx, member_id_col]
         df.at[idx, 'Downstream_Count'] = calculate_downstream_count(member_id)
     
     # 如果没有指定输出路径，使用默认路径和文件名
@@ -164,4 +182,6 @@ if __name__ == "__main__":
     member_id_col = input("请输入会员ID字段名称: ")
     referrer_id_col = input("请输入推荐人ID字段名称: ")
 
+    # 执行层级计算的主函数
     calculate_membership_levels(input_file_path, member_id_col, referrer_id_col, output_file_path)
+
